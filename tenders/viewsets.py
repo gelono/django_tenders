@@ -87,20 +87,24 @@ class ExtendedCompanyDataView(APIView):
 
     def get(self, request):
         user = request.user
-        subscriber = Subscriber.objects.get(user=user)
-        subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
-        user_subscriber_balance = subscriber_balance.current_balance
+        company_id = request.query_params.get('id')
+        try:
+            data = self.queryset.get(id=company_id)
+        except ObjectDoesNotExist:
+            data = None
 
-        if user_subscriber_balance >= 10:
-            company_id = request.query_params.get('id')
-            try:
-                data = self.queryset.get(id=company_id)
-            except ObjectDoesNotExist:
-                data = None
-
+        if user.is_staff:
             if data:
                 serializer = ExtendedCompanyDataSerializer(data)
+                return Response(serializer.data)
+            else:
+                return Response('The company was not found', status=status.HTTP_400_BAD_REQUEST)
 
+        subscriber = Subscriber.objects.get(user=user)
+        subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
+        if subscriber_balance.current_balance >= 10:
+            if data:
+                serializer = ExtendedCompanyDataSerializer(data)
                 trans_data = {
                     'amount': 10,
                     'currency': 'UAH'

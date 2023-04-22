@@ -8,13 +8,13 @@ from tenders.models import ArchiveTender, Customer, DKNumber, Winner, Subscriber
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ('customer_name', 'customer_edrpou')
+        fields = ('id', 'customer_name', 'customer_edrpou')
 
 
 class WinnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Winner
-        fields = ('winner_name', )
+        fields = ('id', 'winner_name')
 
 
 class DKNumberSerializer(serializers.ModelSerializer):
@@ -47,9 +47,11 @@ class SubscriberBalanceSerializer(serializers.ModelSerializer):
 
 
 class TransactionInSerializer(serializers.ModelSerializer):
+    username = UserSerializer(source='subscriber_balance.subscriber.user', read_only=True)
+
     class Meta:
         model = TransactionIn
-        fields = ('id', 'created', 'amount', 'currency')
+        fields = ('id', 'created', 'amount', 'currency', 'username')
 
 
 class TransactionOutSerializer(serializers.ModelSerializer):
