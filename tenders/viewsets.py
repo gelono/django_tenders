@@ -1,13 +1,13 @@
-import requests
 from django.core.exceptions import ObjectDoesNotExist
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from django_tenders.permissions import DKNumbersIsSubscriberOrAdmin, BalanceIsAdmin, IsAdminOrReadOnly, \
-    IsAdminOrReadAndPutOnly
+from django_tenders.permissions import IsAdminOrReadOnly, IsAdminOrReadAndPutOnly
+from tenders.filters import TenderFilter, CustomerFilter, WinnerFilter
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
     ExtendedCompanyData
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
@@ -17,6 +17,8 @@ from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, Win
 class ArchiveTenderViewSet(ModelViewSet):
     serializer_class = ArchiveTenderSerializer
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly, ]  # IsAuthenticated, DKNumbersIsSubscriberOrAdmin
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TenderFilter
 
     queryset = ArchiveTender.objects.select_related('customer').prefetch_related('dk_numbers')
 
@@ -31,11 +33,15 @@ class ArchiveTenderViewSet(ModelViewSet):
 class CustomerViewSet(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CustomerFilter
 
 
 class WinnerViewSet(ModelViewSet):
     queryset = Winner.objects.all()
     serializer_class = WinnerSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = WinnerFilter
 
 
 class BalanceViewSet(ModelViewSet):
@@ -59,6 +65,12 @@ class TransactionInView(APIView):
 
     def get(self, request):
         user = request.user
+
+        if user.is_staff:
+            data = self.queryset.all()
+            serializer = TransactionInSerializer(data, many=True)
+            return Response(serializer.data)
+
         subscriber = Subscriber.objects.get(user=user)
         subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
         data = self.queryset.filter(subscriber_balance=subscriber_balance)
@@ -94,6 +106,11 @@ class ExtendedCompanyDataView(APIView):
             data = None
 
         if user.is_staff:
+            if not company_id:
+                data = self.queryset.all()
+                serializer = ExtendedCompanyDataSerializer(data, many=True)
+                return Response(serializer.data)
+
             if data:
                 serializer = ExtendedCompanyDataSerializer(data)
                 return Response(serializer.data)
@@ -118,6 +135,6 @@ class ExtendedCompanyDataView(APIView):
 
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response('The company was not found', status=status.HTTP_400_BAD_REQUEST)
+            return Response('The company was not found', status=status.HTTP_404_NOT_FOUND)
 
         return Response('The lack of funds', status=status.HTTP_400_BAD_REQUEST)

@@ -6,7 +6,6 @@ from rest_framework.request import Request
 
 class AdminSecretHeaderAuthentication(BaseAuthentication):
     def authenticate(self, request: Request):
-        print('SecretHeaderAuthentication is called')
         secret_header = request.META.get("HTTP_SECRET_HEADER")
         if secret_header is None:
             return None

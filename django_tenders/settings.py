@@ -25,7 +25,7 @@ SECRET_KEY = ')#h2a#m&w=kq$5oqd7jua1xmzkrzi)ma(bji6*%s^5+nem1d+8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", '127.0.0.1', ]
 
 
 # Application definition
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
+    'drf_yasg',
     'tenders',
 ]
 
@@ -76,12 +78,17 @@ REST_FRAMEWORK = {
         'django_tenders.permissions.IsAdminOrReadOnly'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'django_tenders.authentication.AdminSecretHeaderAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer', ] if not DEBUG else [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
 }
 
 WSGI_APPLICATION = 'django_tenders.wsgi.application'

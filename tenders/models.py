@@ -80,7 +80,7 @@ class Subscriber(models.Model):
     dk_numbers = models.ManyToManyField(DKNumber)
 
     def __str__(self):
-        return self.phone_number
+        return self.user.username
 
 
 class SubscriberBalance(models.Model):

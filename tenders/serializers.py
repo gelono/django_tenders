@@ -64,3 +64,18 @@ class ExtendedCompanyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtendedCompanyData
         fields = ('id', 'fullname', 'shortname', 'location', 'email', 'primary_activity', 'ceo_name', 'capital')
+
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("username", "first_name", "last_name", "password")
+
+        def create(self, validated_data):
+            user = User.objects.create(
+                username=validated_data['username'],
+                password=validated_data['password'],
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name']
+            )
+            return user

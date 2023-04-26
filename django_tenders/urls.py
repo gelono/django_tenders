@@ -14,14 +14,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework import routers
+from django.urls import path, include, re_path
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import routers, permissions
 
 from django_tenders.views import session_auth
+from tenders.auth_views import login_view, register_view, logout_view
 from tenders.viewsets import ArchiveTenderViewSet, CustomerViewSet, WinnerViewSet, BalanceViewSet, TransactionInView, \
     ExtendedCompanyDataView
 
 from rest_framework.authtoken import views
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Books API API",
+      default_version='v1',
+      contact=openapi.Contact(email="vitalii@vitalii.tech"),
+   ),
+   public=True,
+   permission_classes=[permissions.AllowAny],
+)
 
 router = routers.DefaultRouter()
 router.register('archive_tenders', ArchiveTenderViewSet)
@@ -32,8 +45,14 @@ router.register('balances', BalanceViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api-token-auth/', views.obtain_auth_token),
-    path('api-session-auth/', session_auth),
+    # path('api-token-auth/', views.obtain_auth_token),
+    # path('api-session-auth/', session_auth),
+    path('api/login', login_view),
+    path('api/register', register_view),
+    path('api/logout', logout_view),
     path('transactions_in/', TransactionInView.as_view()),
     path('extended_company_data/', ExtendedCompanyDataView.as_view()),
+    re_path(r'^api/swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    re_path(r'^api/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'^api/redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
