@@ -7,20 +7,37 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from django_tenders.permissions import IsAdminOrReadOnly, IsAdminOrReadAndPutOnly
-from tenders.filters import TenderFilter, CustomerFilter, WinnerFilter
+from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
-    ExtendedCompanyData
+    ExtendedCompanyData, ActiveTender
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
-    SubscriberBalanceSerializer, TransactionInSerializer, ExtendedCompanyDataSerializer, TransactionOutSerializer
+    SubscriberBalanceSerializer, TransactionInSerializer, ExtendedCompanyDataSerializer, TransactionOutSerializer, \
+    ActiveTenderSerializer
 
 
 class ArchiveTenderViewSet(ModelViewSet):
     serializer_class = ArchiveTenderSerializer
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly, ]  # IsAuthenticated, DKNumbersIsSubscriberOrAdmin
     filter_backends = [DjangoFilterBackend]
-    filterset_class = TenderFilter
+    filterset_class = ArchiveTenderFilter
 
     queryset = ArchiveTender.objects.select_related('customer').prefetch_related('dk_numbers')
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return self.queryset
+        else:
+            subscriber = Subscriber.objects.get(user=self.request.user)
+            return self.queryset.filter(dk_numbers__in=subscriber.dk_numbers.all())
+
+
+class ActiveTenderViewSet(ModelViewSet):
+    serializer_class = ActiveTenderSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly, ]  # IsAuthenticated, DKNumbersIsSubscriberOrAdmin
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ActiveTenderFilter
+
+    queryset = ActiveTender.objects.select_related('customer').prefetch_related('dk_numbers')
 
     def get_queryset(self):
         if self.request.user.is_staff:

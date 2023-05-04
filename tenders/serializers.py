@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from tenders.models import ArchiveTender, Customer, DKNumber, Winner, SubscriberBalance, TransactionIn, \
-    ExtendedCompanyData, TransactionOut
+    ExtendedCompanyData, TransactionOut, ActiveTender
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -29,6 +29,15 @@ class ArchiveTenderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArchiveTender
+        fields = ('id', 'tender_name', 'status', 'dk_numbers', 'customer')
+
+
+class ActiveTenderSerializer(serializers.ModelSerializer):
+    dk_numbers = DKNumberSerializer(many=True)
+    customer = CustomerSerializer()
+
+    class Meta:
+        model = ActiveTender
         fields = ('id', 'tender_name', 'status', 'dk_numbers', 'customer')
 
 

@@ -1,6 +1,15 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# from tenders.models import ActiveTender
+# from tenders.parsing.tasks import user_notification
+
+# from tenders.models import Subscriber
+from tenders.parsing.telegram import send_telegram_message
+
 
 # Create your models here.
 class ExtendedCompanyData(models.Model):
@@ -77,6 +86,7 @@ class ActiveTender(models.Model):
 class Subscriber(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15)
+    telegram_user_id = models.CharField(max_length=20, null=True)
     dk_numbers = models.ManyToManyField(DKNumber)
 
     def __str__(self):
@@ -112,3 +122,37 @@ class TransactionOut(models.Model):
 
     def __str__(self):
         return self.created
+
+
+# @receiver(post_save, sender=ActiveTender)
+# def on_order_save_in_thread(sender, instance: ActiveTender, created, **kwargs):
+#     if created:
+#         message = 'Здравствуйте! Уведомляем Вас о появившемся новом тендере в интересующем Вас разделе: '
+#         link = instance.link
+#         dk_numbers = [dk.dk_number for dk in instance.dk_numbers.all()]
+#         user_notification(dk_numbers, link, message)
+#     # else:
+#     #     message = 'Здравствуйте! Уведомляем Вас о внесении изменений в тендер в интересующем Вас разделе: '
+#     #     link = instance.link
+#     #     dk_numbers = [dk.dk_number for dk in instance.dk_numbers.all()]
+#     #     user_notification(dk_numbers, link, message)
+
+
+# def user_notification(dk_numbers: list, link: str, message: str):
+#     text = message + link
+#     for dk_number in dk_numbers:
+#         dk_number = dk_number.replace(':', '.')
+#         try:
+#             tg_user_ids = list(
+#                 Subscriber.objects.values_list('telegram_user_id', flat=True).prefetch_related().
+#                 filter(dk_numbers__dk_number=dk_number)
+#             )
+#         except Exception:
+#             print('[INFO] User emails are not received')
+#         else:
+#             if tg_user_ids:
+#                 for tg_user_id in tg_user_ids:
+#                     send_telegram_message(tg_user_id, text)
+#                     print('Sending the message...')
+#             else:
+#                 print('There are no users for notifications')

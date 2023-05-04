@@ -1,13 +1,21 @@
 from django_filters import FilterSet, CharFilter
 
-from tenders.models import ArchiveTender, Customer, Winner
+from tenders.models import ArchiveTender, Customer, Winner, ActiveTender
 
 
-class TenderFilter(FilterSet):
+class ArchiveTenderFilter(FilterSet):
     tender_name = CharFilter(field_name='tender_name', lookup_expr='icontains')
 
     class Meta:
         model = ArchiveTender
+        fields = ['tender_name', 'status', ]
+
+
+class ActiveTenderFilter(FilterSet):
+    tender_name = CharFilter(field_name='tender_name', lookup_expr='icontains')
+
+    class Meta:
+        model = ActiveTender
         fields = ['tender_name', 'status', ]
 
 
