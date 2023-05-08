@@ -9,8 +9,9 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-from pathlib import Path
 
+from pathlib import Path
+from celery.schedules import crontab
 from dotenv import load_dotenv
 import os
 
@@ -24,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ')#h2a#m&w=kq$5oqd7jua1xmzkrzi)ma(bji6*%s^5+nem1d+8'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG') == "True"
 
 ALLOWED_HOSTS = ["localhost", '127.0.0.1', ]
 
@@ -40,9 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphene_django',
     'rest_framework',
     'rest_framework.authtoken',
-    # 'django_celery_beat',
+    'django_celery_beat',
     'django_filters',
     'drf_yasg',
     'allauth',
@@ -51,9 +53,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.telegram',
     'celery',
-    # 'kombu.transport.django',
     'tenders',
-    # 'django_celery_results',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+CELERY_BEAT_SCHEDULE = {
+    'reporting': {
+        'task': 'tenders.tasks.report_to_google_sheets',
+        'schedule': crontab(minute=0, hour=17)
+    }
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -168,7 +176,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 # Celery with RabbitMQ
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST")
 CELERY_BROKER_URL = os.environ.get("CLOUDAMQP_URL", f"amqp://guest:guest@{RABBITMQ_HOST}:5672/")
-# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = 'django-db'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -206,5 +214,5 @@ LOGOUT_REDIRECT_URL = '/'
 SOCIALACCOUNT_STORE_TOKENS = True
 
 GRAPHENE = {
-    "SCHEMA": "hillel_django.schema.schema"
+    "SCHEMA": "django_tenders.schema.schema"
 }

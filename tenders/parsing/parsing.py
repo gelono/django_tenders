@@ -1,10 +1,16 @@
+import time
 from datetime import datetime
 import threading
+
+import requests
 from pytz import timezone
-from tenders.models import ArchiveTender, ActiveTender, Customer
+from tenders.models import ArchiveTender, ActiveTender
 # from tenders.parsing.tasks import user_notification
-from tenders.parsing.tools import *
+
 import urllib3
+
+from tenders.parsing.tools import get_api_data_for_db, django_orm_insert_into_arch_act, check_match, \
+    django_orm_update_arch_act
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -39,16 +45,11 @@ def parse_with_tender_id_by_api(total_links, start, step, bot, sleep, is_archiva
             if is_archivating:
                 if dict_for_database['Статус'] in ('complete', 'unsuccessful', 'cancelled', 'active.awarded'):
                     django_orm_insert_into_arch_act(ArchiveTender, dict_for_database)
-                    # prozorro_api_post_tender('archive', dict_for_database, token, host)
 
                 else:
                     django_orm_insert_into_arch_act(ActiveTender, dict_for_database)
-                    # prozorro_api_post_tender('active', dict_for_database, token, host)
             else:
                 django_orm_insert_into_arch_act(ActiveTender, dict_for_database)
-                # prozorro_api_post_tender('active', dict_for_database, token, host)
-
-            # print(f'[INFO from bot# {bot}] Data {total_links[i]} was added to the active_tenders', count)
         except Exception as e:
             print(f'[INFO from bot# {bot}] XXX Data {total_links[i]} was not added to the database XXX', e, count,
                   link)
@@ -65,12 +66,6 @@ def online_processing_active_tenders(tenders_list: list, start_index: int, step:
     :return:
     """
 
-    # messages = [
-    #     'Здравствуйте! Уведомляем Вас о появившемся новом тендере в интересующем Вас разделе. Рекомендуем ознакомиться: ',
-    #     'Здравствуйте! Уведомляем Вас о завершении тендера в интересующем Вас разделе: ',
-    #     'Здравствуйте! Уведомляем Вас о внесении изменений в тендер в интересующем Вас разделе: ',
-    # ]
-
     count = 0
     for i in range(start_index, len(tenders_list), step):
         count += 1
@@ -83,16 +78,15 @@ def online_processing_active_tenders(tenders_list: list, start_index: int, step:
         except Exception as e:
             print(f'[INFO from bot# {bot}] Data {tenders_list[i]} was not collected from the page', e)
         else:
-            dk_numbers = dict_tender_for_matching['Номер тендеру'].split(', ')
-            link = dict_tender_for_matching['Веб-посилання']
             is_match = check_match(tender, dict_tender_for_matching)
 
             if inner_status == 'new':
-                # user_notification(dk_numbers, link, messages[0])
                 try:
                     ActiveTender.objects.filter(id=db_id).update(inner_status='old')
                 except Exception as e:
                     print(f'[INFO from bot# {bot}] Data was not updated in collector.active_tenders', e)
+                else:
+                    print(f'[INFO from bot# {bot}] Inner_status was updated in the tender id: {db_id}')
 
             if dict_tender_for_matching['Статус'] in ('complete', 'unsuccessful', 'cancelled', 'active.awarded'):
                 is_tender_replaced = False
@@ -111,7 +105,6 @@ def online_processing_active_tenders(tenders_list: list, start_index: int, step:
                     else:
                         print(f'[INFO from bot# {bot}] Data was deleted from collector.active_tenders')
 
-                    # user_notification(dk_numbers, link, messages[1])
                     continue
 
             if not is_match:
@@ -120,8 +113,6 @@ def online_processing_active_tenders(tenders_list: list, start_index: int, step:
                     django_orm_update_arch_act(ActiveTender, dict_tender_for_matching, dct_filter)
                 except Exception as e:
                     print(f'[INFO from bot# {bot}] Data {tender_id} was not updated in collector.active_tenders', e)
-
-                # user_notification(dk_numbers, link, messages[2])
 
 
 def manager_for_processing_active_tenders(bot_numbers):
@@ -198,8 +189,6 @@ def manager_for_collecting_links(bot_numbers: int):
                                 id_list.remove(id_list[i])
 
                         url = data.get('next_page').get('uri')
-                        # print(f'[Collector] NEXT URL: {url}')
-                        # print(id_list)
 
                         if first_level:
                             index = len(first_level) - 1

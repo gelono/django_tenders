@@ -1,4 +1,3 @@
-from pprint import pprint
 import pandas as pd
 from django.core.management import BaseCommand
 

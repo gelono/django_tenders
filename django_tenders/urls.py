@@ -20,14 +20,13 @@ from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+from graphene_django.views import GraphQLView
 from rest_framework import routers, permissions
 
-from django_tenders.views import session_auth
 from tenders.auth_views import login_view, register_view, logout_view
 from tenders.viewsets import ArchiveTenderViewSet, CustomerViewSet, WinnerViewSet, BalanceViewSet, TransactionInView, \
     ExtendedCompanyDataView, ActiveTenderViewSet
 
-from rest_framework.authtoken import views
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -49,6 +48,7 @@ router.register('balances', BalanceViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('graphql', GraphQLView.as_view(graphiql=True)),
     # path('api-token-auth/', views.obtain_auth_token),
     # path('api-session-auth/', session_auth),
     path('api/login', login_view),

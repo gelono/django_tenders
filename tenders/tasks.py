@@ -1,14 +1,12 @@
-import time
-
 from celery import shared_task
 
+from django_tenders.google_sheets import write_from_google_sheets
 from tenders.models import Subscriber, ActiveTender
 from tenders.parsing.telegram import send_telegram_message
 
 
 @shared_task()
 def user_notification(obj_id: int, link: str, message: str):
-    # print('user_notification triggered')
     text = message + link
     tender = ActiveTender.objects.get(id=obj_id)
     dk_numbers = [dk.dk_number for dk in tender.dk_numbers.all()]
@@ -28,3 +26,9 @@ def user_notification(obj_id: int, link: str, message: str):
                     print('Sending the message...')
             else:
                 print('There are no users for notifications')
+
+
+@shared_task()
+def report_to_google_sheets():
+    tenders = ActiveTender.objects.all()[:50]
+    write_from_google_sheets(tenders)

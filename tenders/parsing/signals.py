@@ -6,15 +6,10 @@ from tenders.tasks import user_notification
 
 
 @receiver(post_save, sender=ActiveTender)
-def on_order_save_in_thread(sender, instance: ActiveTender, created, **kwargs):
+def on_tender_save(sender, instance: ActiveTender, created, **kwargs):
+    print('post_save receiver triggered')
     if created:
-        # print('receiver triggered')
         message = 'Здравствуйте! Уведомляем Вас о появившемся новом тендере в интересующем Вас разделе: '
         link = instance.link
         obj_id = instance.id
         user_notification.apply_async(args=[obj_id, link, message], countdown=1)
-    # else:
-    #     message = 'Здравствуйте! Уведомляем Вас о внесении изменений в тендер в интересующем Вас разделе: '
-    #     link = instance.link
-    #     dk_numbers = [dk.dk_number for dk in instance.dk_numbers.all()]
-    #     user_notification(dk_numbers, link, message)
