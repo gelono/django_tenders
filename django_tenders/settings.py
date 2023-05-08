@@ -110,14 +110,19 @@ WSGI_APPLICATION = 'django_tenders.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+USE_POSTGRES = os.environ.get('USE_POSTGRES') == 'True'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django_tenders',
-        'USER': 'postgres',
-        'PASSWORD': '12345',
-        'HOST': 'localhost',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
         'PORT': '5432',
+    } if USE_POSTGRES else {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db.sqlite'
     }
 }
 
