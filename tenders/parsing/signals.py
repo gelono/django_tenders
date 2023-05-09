@@ -7,7 +7,6 @@ from tenders.tasks import user_notification
 
 @receiver(post_save, sender=ActiveTender)
 def on_tender_save(sender, instance: ActiveTender, created, **kwargs):
-    print('post_save receiver triggered')
     if created:
         message = 'Здравствуйте! Уведомляем Вас о появившемся новом тендере в интересующем Вас разделе: '
         link = instance.link

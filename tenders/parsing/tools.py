@@ -1,8 +1,10 @@
 import time
 
 import requests
+from requests import RequestException
 
 from tenders.models import DKNumber, Customer, Winner
+from tenders.parsing.json_parse import JsonParse
 
 
 def reformat_string(dct: dict) -> dict:
@@ -32,48 +34,30 @@ def get_api_data_for_db(tender_id, sleep):
         response = requests.get(url, verify=False)
     except Exception as e:
         print(e)
-        response = None
-    if 300 > response.status_code >= 200:
-        if 'application/json' in response.headers.get('Content-Type', ''):
-            try:
+    else:
+        if 300 > response.status_code >= 200:
+            if 'application/json' in response.headers.get('Content-Type', ''):
                 data = response.json()
-            except Exception as e:
-                print(e)
-            else:
-                dict_for_database['Веб-посилання'] = f'https://prozorro.gov.ua/tender/{tender_id}'
-                dict_for_database['Статус'] = data.get('data', {}).get('status', 'Немає даних')
-                dict_for_database['Назва тендеру'] = data.get('data', {}).get('title', 'Немає даних')
-                dk_numbers = set()
-                dk_list = data.get('data', {}).get('items', [])
-                for i in dk_list:
-                    dk = i.get('classification', {}).get('scheme', 'Немає даних') + ':2015:' + i.get(
-                        'classification', {}).get('id', 'Немає даних')
-                    dk_numbers.add(dk)
-                dk_numbers = list(dk_numbers)
-                dk_numbers = ', '.join(dk_numbers)
-                dict_for_database['Номер тендеру'] = dk_numbers
-                dict_for_database['Замовник'] = data.get(
-                    'data', {}).get('procuringEntity', {}).get('name', 'Немає даних')
-                dict_for_database['Замовник_ЄДРПОУ'] = data.get('data', {}).get('procuringEntity', {}).get(
-                    'identifier', {}).get('id', 'Немає даних')
-                dict_for_database['Очікувана ціна'] = float(data.get('data', {}).get('value', {}).get('amount', 0))
-                dict_for_database['Кінцева ціна'] = float(
-                    data.get('data', {}).get('awards', [{}])[-1].get('value', {}).get('amount', 0))
-                dict_for_database['Переможець'] = data.get(
-                    'data', {}).get('awards', [{}])[-1].get('suppliers', [{}])[-1].get('name', 'Немає даних')
-                dict_for_database['Переможець_ЄДРПОУ'] = data.get(
-                    'data', {}).get('awards', [{}])[-1].get('suppliers', [{}])[-1].get(
-                    'identifier', {}).get('id', 'Немає даних')
-                date_created = data.get('data', {}).get('dateCreated', None)
-                if date_created is not None:
-                    # date_created = "'" + date_created[:10] + "'"
-                    date_created = date_created[:10]
-                dict_for_database['Дата оприлюдення'] = date_created
-                dict_for_database['Email замовника'] = data.get('data', {}).get('procuringEntity', {}).get(
-                    'contactPoint', {}).get('email', 'Немає даних')
+                json_parse = JsonParse(data)
 
-    dict_for_database = reformat_string(dict_for_database)
-    return dict_for_database
+                dict_for_database['Веб-посилання'] = f'https://prozorro.gov.ua/tender/{tender_id}'
+                dict_for_database['Статус'] = json_parse.get_status()
+                dict_for_database['Назва тендеру'] = json_parse.get_tender_name()
+                dict_for_database['Номер тендеру'] = json_parse.get_dk_numbers()
+                dict_for_database['Замовник'] = json_parse.get_customer()
+                dict_for_database['Замовник_ЄДРПОУ'] = json_parse.get_customer_edrpou()
+                dict_for_database['Очікувана ціна'] = json_parse.get_initial_price()
+                dict_for_database['Кінцева ціна'] = json_parse.get_finish_price()
+                dict_for_database['Переможець'] = json_parse.get_winner()
+                dict_for_database['Переможець_ЄДРПОУ'] = json_parse.get_winner_edrpou()
+                dict_for_database['Дата оприлюдення'] = json_parse.get_publication_date()
+                dict_for_database['Email замовника'] = json_parse.get_customer_email()
+
+                dict_for_database = reformat_string(dict_for_database)
+
+                return dict_for_database
+        else:
+            raise RequestException
 
 
 def django_orm_insert_into_arch_act(model, dict_for_database):
