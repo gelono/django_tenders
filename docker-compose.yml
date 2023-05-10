@@ -1,0 +1,66 @@
+services:
+  web:
+    build:
+      context: .
+    image: django_tenders
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DB_HOST=db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=admin123
+      - DB_NAME=postgres
+    restart: always
+  migrate:
+    image: django_tenders
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    env_file: .env
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DB_HOST=db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=admin123
+      - DB_NAME=postgres
+    command: python manage.py migrate
+    restart: on-failure
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  celery:
+    depends_on:
+      - db
+      - rabbitmq
+    image: django_tenders
+    volumes:
+      - .:/app
+    env_file: .env
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DB_HOST=db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=admin123
+      - DB_NAME=postgres
+    command: celery -A django_tenders worker -l info --beat
+    restart: always
+  db:
+    image: postgres
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_PASSWORD: 'admin123'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'postgres'

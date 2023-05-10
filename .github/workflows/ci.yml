@@ -40,6 +40,6 @@ jobs:
 
       - name: Run unit tests
         env:
-          TELEGRAM_TOKEN: sjdghqvuevq
+          TELEGRAM_TOKEN: os.environ.get("TELEGRAM_TOKEN")
         run: |
           python manage.py test
