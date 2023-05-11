@@ -8,19 +8,19 @@ from tenders.models import ArchiveTender, Customer, DKNumber, Winner, Subscriber
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ('id', 'customer_name', 'customer_edrpou')
+        fields = ('id', 'name', 'edrpou')
 
 
 class WinnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Winner
-        fields = ('id', 'winner_name')
+        fields = ('id', 'name')
 
 
 class DKNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = DKNumber
-        fields = ('dk_number',)
+        fields = ('dk',)
 
 
 class ArchiveTenderSerializer(serializers.ModelSerializer):

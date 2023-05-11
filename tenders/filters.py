@@ -20,16 +20,16 @@ class ActiveTenderFilter(FilterSet):
 
 
 class CustomerFilter(FilterSet):
-    customer_name = CharFilter(field_name='customer_name', lookup_expr='icontains')
+    customer_name = CharFilter(field_name='name', lookup_expr='icontains')
 
     class Meta:
         model = Customer
-        fields = ['customer_name', 'customer_edrpou', ]
+        fields = ['name', 'edrpou', ]
 
 
 class WinnerFilter(FilterSet):
-    winner_name = CharFilter(field_name='winner_name', lookup_expr='icontains')
+    winner_name = CharFilter(field_name='name', lookup_expr='icontains')
 
     class Meta:
         model = Winner
-        fields = ['winner_name', ]
+        fields = ['name', ]

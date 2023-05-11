@@ -17,29 +17,29 @@ class ExtendedCompanyData(models.Model):
 
 
 class Customer(models.Model):
-    customer_name = models.CharField(max_length=500, unique=True)
-    customer_edrpou = models.CharField(max_length=100, unique=True)
-    customer_person_contact = models.EmailField(null=True)
-    customer_data = models.OneToOneField(ExtendedCompanyData, on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=500, unique=True)
+    edrpou = models.CharField(max_length=100, unique=True)
+    person_contact = models.EmailField(null=True)
+    data = models.OneToOneField(ExtendedCompanyData, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.customer_name
+        return self.name
 
 
 class Winner(models.Model):
-    winner_name = models.CharField(max_length=500, unique=True)
-    winner_data = models.OneToOneField(ExtendedCompanyData, on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=500, unique=True)
+    data = models.OneToOneField(ExtendedCompanyData, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.winner_name
+        return self.name
 
 
 class DKNumber(models.Model):
-    dk_number = models.CharField(max_length=100)
+    dk = models.CharField(max_length=100)
     description = models.CharField(max_length=2000)
 
     def __str__(self):
-        return self.dk_number
+        return self.dk
 
 
 class ArchiveTender(models.Model):

@@ -5,7 +5,6 @@ import threading
 import requests
 from pytz import timezone
 from tenders.models import ArchiveTender, ActiveTender
-# from tenders.parsing.tasks import user_notification
 
 import urllib3
 
@@ -128,7 +127,7 @@ def manager_for_processing_active_tenders(bot_numbers):
         try:
             tenders = list(ActiveTender.objects.all().select_related('winner').values_list(
                 'id', 'link', 'status', 'tender_name', 'customer_id', 'initial_price', 'finish_price',
-                'winner__winner_name', 'publication_date', 'inner_status').order_by('id'))
+                'winner__name', 'publication_date', 'inner_status').order_by('id'))
         except Exception as e:
             print('[Processor] [INFO] The tenders data has not been collected', e)
         else:

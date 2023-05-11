@@ -62,13 +62,13 @@ def get_api_data_for_db(tender_id, sleep):
 
 def django_orm_insert_into_arch_act(model, dict_for_database):
     customer, _ = Customer.objects.get_or_create(
-        customer_edrpou=dict_for_database['Замовник_ЄДРПОУ'],
-        defaults={'customer_name': dict_for_database['Замовник'],
-                  'customer_person_contact': dict_for_database['Email замовника']}
+        edrpou=dict_for_database['Замовник_ЄДРПОУ'],
+        defaults={'name': dict_for_database['Замовник'],
+                  'person_contact': dict_for_database['Email замовника']}
     )
 
     winner, _ = Winner.objects.get_or_create(
-        winner_name=dict_for_database['Переможець'],
+        name=dict_for_database['Переможець'],
     )
 
     tender = model.objects.create(
@@ -83,7 +83,7 @@ def django_orm_insert_into_arch_act(model, dict_for_database):
     )
 
     dk_numbers = dict_for_database['Номер тендеру'].split(', ')
-    dk_numbers = DKNumber.objects.values_list('id', flat=True).filter(dk_number__in=dk_numbers)
+    dk_numbers = DKNumber.objects.values_list('id', flat=True).filter(dk__in=dk_numbers)
 
     tender.dk_numbers.set(DKNumber.objects.filter(id__in=dk_numbers))
     print(f'[INFO] The data was successfully inserted into {model}')
@@ -91,7 +91,7 @@ def django_orm_insert_into_arch_act(model, dict_for_database):
 
 def django_orm_update_arch_act(model, dict_for_database, dct_filter: dict):
     winner, _ = Winner.objects.get_or_create(
-        winner_name=dict_for_database['Переможець'],
+        name=dict_for_database['Переможець'],
     )
 
     model.objects.filter(**dct_filter).update(

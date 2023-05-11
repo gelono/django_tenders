@@ -1,5 +1,5 @@
 from celery import shared_task
-
+from django.db import DatabaseError
 from django_tenders.google_sheets import write_from_google_sheets
 from tenders.models import Subscriber, ActiveTender
 from tenders.parsing.telegram import send_telegram_message
@@ -9,16 +9,17 @@ from tenders.parsing.telegram import send_telegram_message
 def user_notification(obj_id: int, link: str, message: str):
     text = message + link
     tender = ActiveTender.objects.get(id=obj_id)
-    dk_numbers = [dk.dk_number for dk in tender.dk_numbers.all()]
+    dk_numbers = [dk.dk for dk in tender.dk_numbers.all()]
     print(dk_numbers)
     for dk_number in dk_numbers:
         try:
             tg_user_ids = list(
                 Subscriber.objects.values_list('telegram_user_id', flat=True).prefetch_related().
-                filter(dk_numbers__dk_number=dk_number)
+                filter(dk_numbers__dk=dk_number)
             )
-        except Exception:
-            print('[INFO] User emails are not received')
+        except DatabaseError as e:
+            print(e)
+            print('[INFO] Error while working with database: telegram_user_ids are not received')
         else:
             if tg_user_ids:
                 for tg_user_id in tg_user_ids:

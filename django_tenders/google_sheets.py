@@ -35,7 +35,7 @@ def write_from_google_sheets(tenders: [ActiveTender]):
     sheet = service.spreadsheets()
 
     values = [
-        [tender.link, tender.status, tender.tender_name, tender.customer.customer_name]
+        [tender.link, tender.status, tender.tender_name, tender.customer.name]
         for tender in tenders
     ]
 

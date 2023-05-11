@@ -21,7 +21,7 @@ class ArchiveTenderViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ArchiveTenderFilter
 
-    queryset = ArchiveTender.objects.select_related('customer').prefetch_related('dk_numbers')
+    queryset = ArchiveTender.objects.select_related('customer').prefetch_related()
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -37,7 +37,7 @@ class ActiveTenderViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ActiveTenderFilter
 
-    queryset = ActiveTender.objects.select_related('customer').prefetch_related('dk_numbers')
+    queryset = ActiveTender.objects.select_related('customer').prefetch_related()
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -88,16 +88,16 @@ class TransactionInView(APIView):
             serializer = TransactionInSerializer(data, many=True)
             return Response(serializer.data)
 
-        subscriber = Subscriber.objects.get(user=user)
-        subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
+        subscriber = Subscriber.objects.select_related('subscriberbalance').get(user=user)  # fix added
+        subscriber_balance = subscriber.subscriberbalance
         data = self.queryset.filter(subscriber_balance=subscriber_balance)
         serializer = TransactionInSerializer(data, many=True)
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        subscriber = Subscriber.objects.get(user=user)
-        user_subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
+        subscriber = Subscriber.objects.select_related('subscriberbalance').get(user=user)  # fix added
+        user_subscriber_balance = subscriber.subscriberbalance
         serializer = TransactionInSerializer(data=request.data)
         if serializer.is_valid():
             transaction = serializer.save(subscriber_balance=user_subscriber_balance)
@@ -134,8 +134,8 @@ class ExtendedCompanyDataView(APIView):
             else:
                 return Response('The company was not found', status=status.HTTP_400_BAD_REQUEST)
 
-        subscriber = Subscriber.objects.get(user=user)
-        subscriber_balance = SubscriberBalance.objects.get(subscriber=subscriber)
+        subscriber = Subscriber.objects.select_related('subscriberbalance').get(user=user)  # fix added
+        subscriber_balance = subscriber.subscriberbalance
         if subscriber_balance.current_balance >= 10:
             if data:
                 serializer = ExtendedCompanyDataSerializer(data)

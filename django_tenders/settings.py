@@ -206,7 +206,7 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     },
     'telegram': {
-        'TOKEN': '5944848658:AAH41kJlyVzkJd9DMqQpaMZnzpN3mCJISFM'
+        'TOKEN': os.environ.get("TELEGRAM_TOKEN")
     }
 }
 
