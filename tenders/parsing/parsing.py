@@ -163,7 +163,7 @@ def manager_for_collecting_links(bot_numbers: int):
             first_level = data.get('data')
             id_list = [dct['id'] for dct in first_level]
 
-            in_steck(steck, id_list)
+            steck_processing(steck, id_list)
 
             url = data.get('next_page').get('uri')
 
@@ -201,7 +201,7 @@ def make_request(url):
     return None
 
 
-def in_steck(steck_var, id_list_var):
+def steck_processing(steck_var, id_list_var):
     i = 0
     while i < len(id_list_var):
         if id_list_var[i] not in steck_var:
