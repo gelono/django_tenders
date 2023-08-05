@@ -16,12 +16,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def parse_with_tender_id_by_api(total_links, start, step, bot, sleep, is_archivating=False):
     """
-    Парсинг тендеров по id (через API), разделение на активные и завершенные в БД
+    Parsing tenders by id (via API), separation into active and completed in the database
     :param sleep:
-    :param bot: int - Порядкоый номер потока
-    :param total_links: list - список id
-    :param start: int - стартовый индекс чтения списка total_links
-    :param step: int - шаг чтения списка total_links
+    :param bot: int - Stream sequence number
+    :param total_links: list - list id
+    :param start: int - start index reading list total_links
+    :param step: int - total_links list reading step
     :param is_archivating: bool
     :return:
     """
@@ -56,12 +56,12 @@ def parse_with_tender_id_by_api(total_links, start, step, bot, sleep, is_archiva
 
 def online_processing_active_tenders(tenders_list: list, start_index: int, step: int, bot: int, sleep: float):
     """
-
+    Handling the ActiveTenders table
     :param step:
     :param start_index:
     :param sleep:
     :param bot:
-    :param tenders_list: Список всех записей со всеми полями из таблицы в БД (active_tenders)
+    :param tenders_list: List of all records with all fields from the table in the database (active_tenders)
     :return:
     """
 
@@ -116,8 +116,8 @@ def online_processing_active_tenders(tenders_list: list, start_index: int, step:
 
 def manager_for_processing_active_tenders(bot_numbers):
     """
-    Менеджер управления обработкой таблицы active_tenders
-    :param bot_numbers: - количество потоков
+    Processing control manager for the active_tenders table
+    :param bot_numbers: - number of threads
     :return:
     """
 
@@ -145,8 +145,8 @@ def manager_for_processing_active_tenders(bot_numbers):
 
 def manager_for_collecting_links(bot_numbers: int):
     """
-    Сбор онлайн свежих тендеров на площадке Prozorro
-    :param bot_numbers: количество потоков для парсинга списка тендеров
+    Collection of online fresh tenders on the Prozorro site
+    :param bot_numbers: number of threads for parsing the list of tenders
     :return: None
     """
 
@@ -158,54 +158,55 @@ def manager_for_collecting_links(bot_numbers: int):
     steck = [''] * 10000
     while True:
         print('[Collector] NEW ONLINE TENDERS REQUEST...')
-        try:
-            response = requests.get(url, verify=False)
-        except Exception as e:
-            print(e)
-            response = None
+        data = make_request(url)
+        if data:
+            first_level = data.get('data')
+            id_list = [dct['id'] for dct in first_level]
 
-        if response:
-            status_code = response.status_code
-            print(f'[Collector] Status_code = {status_code}')
-            if 300 > response.status_code >= 200:
-                if 'application/json' in response.headers.get('Content-Type', ''):
-                    try:
-                        data = response.json()
-                    except AttributeError as e:
-                        print(e)
-                        print("[Collector] [INFO] XXX The response does not have JSON data XXX")
-                    else:
-                        first_level = data.get('data')
-                        id_list = [dct['id'] for dct in first_level]
+            in_steck(steck, id_list)
 
-                        i = 0
-                        while i < len(id_list):
-                            if id_list[i] not in steck:
-                                steck.insert(0, id_list[i])
-                                steck.remove(steck[-1])
-                                i += 1
-                            else:
-                                id_list.remove(id_list[i])
+            url = data.get('next_page').get('uri')
 
-                        url = data.get('next_page').get('uri')
+            if first_level:
+                index = len(first_level) - 1
+                print(first_level[index]['dateModified'])
+            else:
+                print('[Collector] THERE ARE HAVE NO ANY NEW TENDERS YET...')
 
-                        if first_level:
-                            index = len(first_level) - 1
-                            print(first_level[index]['dateModified'])
-                        else:
-                            print('[Collector] THERE ARE HAVE NO ANY NEW TENDERS YET...')
-
-                        if id_list:
-                            threads = []
-                            for i in range(bot_numbers):
-                                t = threading.Thread(
-                                    target=parse_with_tender_id_by_api,
-                                    args=(id_list, i, bot_numbers, i + 1, i / 10 + 0.1, True)
-                                )
-                                threads.append(t)
-                                t.start()
-                            for thread in threads:
-                                thread.join()
+            if id_list:
+                threads = []
+                for i in range(bot_numbers):
+                    t = threading.Thread(
+                        target=parse_with_tender_id_by_api,
+                        args=(id_list, i, bot_numbers, i + 1, i / 10 + 0.1, True)
+                    )
+                    threads.append(t)
+                    t.start()
+                for thread in threads:
+                    thread.join()
 
         print('[Collector] SlEEP 5 SECONDS...')
         time.sleep(5)
+
+
+def make_request(url):
+    try:
+        response = requests.get(url, verify=False)
+        if response.status_code < 300:
+            return response.json()
+        else:
+            print(f"Request failed with status code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+    return None
+
+
+def in_steck(steck_var, id_list_var):
+    i = 0
+    while i < len(id_list_var):
+        if id_list_var[i] not in steck_var:
+            steck_var.insert(0, id_list_var[i])
+            steck_var.remove(steck_var[-1])
+            i += 1
+        else:
+            id_list_var.remove(id_list_var[i])

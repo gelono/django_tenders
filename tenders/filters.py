@@ -20,7 +20,7 @@ class ActiveTenderFilter(FilterSet):
 
 
 class CustomerFilter(FilterSet):
-    customer_name = CharFilter(field_name='name', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
 
     class Meta:
         model = Customer
