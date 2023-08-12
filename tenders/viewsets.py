@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from django_tenders.permissions import IsAdminOrReadOnly, IsAdminOrReadAndPutOnly
+from django_tenders.permissions import IsAdminOrReadAndPutOnly
 from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
     ExtendedCompanyData, ActiveTender
