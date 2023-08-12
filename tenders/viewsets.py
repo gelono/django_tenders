@@ -13,38 +13,25 @@ from tenders.models import ArchiveTender, Customer, Subscriber, Winner, Subscrib
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
     SubscriberBalanceSerializer, TransactionInSerializer, ExtendedCompanyDataSerializer, TransactionOutSerializer, \
     ActiveTenderSerializer
+from tenders.utils import TenderMixin
 
 
-class ArchiveTenderViewSet(ModelViewSet):
+class ArchiveTenderViewSet(TenderMixin, ModelViewSet):
     serializer_class = ArchiveTenderSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly, ]  # IsAuthenticated, DKNumbersIsSubscriberOrAdmin
-    filter_backends = [DjangoFilterBackend]
     filterset_class = ArchiveTenderFilter
-
-    queryset = ArchiveTender.objects.select_related('customer').prefetch_related()
+    queryset = ArchiveTender.objects.all()
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return self.queryset
-        else:
-            subscriber = Subscriber.objects.get(user=self.request.user)
-            return self.queryset.filter(dk_numbers__in=subscriber.dk_numbers.all())
+        return self.get_queryset_mixin(model=ArchiveTender)
 
 
-class ActiveTenderViewSet(ModelViewSet):
+class ActiveTenderViewSet(TenderMixin, ModelViewSet):
     serializer_class = ActiveTenderSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly, ]  # IsAuthenticated, DKNumbersIsSubscriberOrAdmin
-    filter_backends = [DjangoFilterBackend]
     filterset_class = ActiveTenderFilter
-
-    queryset = ActiveTender.objects.select_related('customer').prefetch_related()
+    queryset = ActiveTender.objects.all()
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return self.queryset
-        else:
-            subscriber = Subscriber.objects.get(user=self.request.user)
-            return self.queryset.filter(dk_numbers__in=subscriber.dk_numbers.all())
+        return self.get_queryset_mixin(model=ActiveTender)
 
 
 class CustomerViewSet(ModelViewSet):
