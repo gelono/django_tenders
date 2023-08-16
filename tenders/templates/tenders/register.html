@@ -1,0 +1,15 @@
+{% extends 'tenders/base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Форма реєстрації</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for f in form %}
+            <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>{{ f }}</p>
+            <div class="form-error">{{ f.errors }}</div>
+        {% endfor %}
+        <button type="submit">Реєстрація</button>
+    </form>
+</div>
+{% endblock %}

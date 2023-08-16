@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path, include, re_path
-from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from graphene_django.views import GraphQLView
@@ -25,8 +24,7 @@ from rest_framework import routers, permissions
 
 from tenders.auth_views import login_view, register_view, logout_view
 from tenders.viewsets import ArchiveTenderViewSet, CustomerViewSet, WinnerViewSet, BalanceViewSet, TransactionInView, \
-    ExtendedCompanyDataView, ActiveTenderViewSet
-
+    ExtendedCompanyDataView, ActiveTenderViewSet, RegisterUser, index, profile_user, LoginUser
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -59,7 +57,11 @@ urlpatterns = [
     re_path(r'^api/swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^api/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^api/redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path("", TemplateView.as_view(template_name="index.html")),
+    path("", index, name='home'),
     path("accounts/", include("allauth.urls")),
-    path("logout", LogoutView.as_view()),
+    path("logout/", LogoutView.as_view(), name='logout'),
+    path("login/", LoginUser.as_view(), name='login'),
+    path("register/", RegisterUser.as_view(), name='register'),
+    path("profile/", profile_user, name='profile'),
+
 ]

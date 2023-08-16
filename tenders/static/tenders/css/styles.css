@@ -1,0 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+header a {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 15px;
+}
+main {
+    display: flex;
+    padding: 20px;
+}
+article {
+    flex: 0 0 30%; /* 30% width, not growing or shrinking */
+    padding-right: 20px;
+}
+aside {
+    flex: 1;
+    padding-left: 20px;
+    border-left: 1px solid #ddd;
+}
+footer {
+    background-color: #f5f5f5;
+    color: #333;
+    padding: 10px;
+    text-align: right;
+}
+h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+strong {
+    font-weight: bold;
+}
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.form-label {
+    display: inline-block;
+    min-width: 150px;
+    vertical-align: top;
+}
+
+.form-error ul {
+    list-style: none;
+    padding: 0;
+    color: #CC0000;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center items horizontally */
+    margin-right: 20px; /* Add spacing between the article and the form */
+    border-left: 1px solid #ddd;
+}
+
+.form-container h1 {
+    margin-left: 450px;
+    margin-bottom: 20px; /* Add spacing between the title and the form */
+}
+
+.form-container form {
+    margin-left: 450px;
+    width: 100%; /* Ensure the form occupies the entire width of its container */
+    max-width: 400px; /* Set a maximum width for the form */
+    padding: 20px; /* Add padding for a better visual appearance */
+    border: 1px solid #ddd; /* Add a border for the form */
+    border-radius: 5px; /* Add rounded corners */
+}

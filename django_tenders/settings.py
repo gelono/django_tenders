@@ -187,6 +187,8 @@ CELERY_RESULT_BACKEND = 'django-db'
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = []
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -213,7 +215,7 @@ SOCIALACCOUNT_PROVIDERS = {
 # Django-allauth
 SITE_ID = 2
 
-LOGIN_REDIRECT_URL = '/admin'
+# LOGIN_REDIRECT_URL = '/admin'
 LOGOUT_REDIRECT_URL = '/'
 
 SOCIALACCOUNT_STORE_TOKENS = True
@@ -221,3 +223,4 @@ SOCIALACCOUNT_STORE_TOKENS = True
 GRAPHENE = {
     "SCHEMA": "django_tenders.schema.schema"
 }
+

@@ -1,4 +1,10 @@
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +14,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from django_tenders.permissions import IsAdminOrReadAndPutOnly
 from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
+from tenders.forms import RegisterUserForm
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
     ExtendedCompanyData, ActiveTender
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
@@ -142,3 +149,40 @@ class ExtendedCompanyDataView(APIView):
             return Response('The company was not found', status=status.HTTP_404_NOT_FOUND)
 
         return Response('The lack of funds', status=status.HTTP_400_BAD_REQUEST)
+
+
+def profile_user(request):
+    return render(request, 'tenders/profile.html', {'title': 'Профіль'})
+
+
+class RegisterUser(CreateView):
+    form_class = RegisterUserForm
+    template_name = 'tenders/register.html'
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Реєстрація'
+        return context
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return redirect('profile')
+
+
+
+class LoginUser(LoginView):
+    form_class = AuthenticationForm
+    template_name = 'tenders/login.html'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Авториація'
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy('profile')
+
+def index(request):
+    return render(request, 'tenders/index.html', {'title': 'Головна сторінка'})
