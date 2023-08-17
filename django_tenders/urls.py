@@ -24,7 +24,7 @@ from rest_framework import routers, permissions
 
 from tenders.auth_views import login_view, register_view, logout_view
 from tenders.viewsets import ArchiveTenderViewSet, CustomerViewSet, WinnerViewSet, BalanceViewSet, TransactionInView, \
-    ExtendedCompanyDataView, ActiveTenderViewSet, RegisterUser, index, profile_user, LoginUser
+    ExtendedCompanyDataView, ActiveTenderViewSet, RegisterUser, index, ProfileUser, LoginUser
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -62,6 +62,6 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name='logout'),
     path("login/", LoginUser.as_view(), name='login'),
     path("register/", RegisterUser.as_view(), name='register'),
-    path("profile/", profile_user, name='profile'),
+    path("profile/<slug:username>/", ProfileUser.as_view(), name='profile'),
 
 ]

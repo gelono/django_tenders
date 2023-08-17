@@ -1,10 +1,11 @@
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy, reverse
+from django.views.generic import CreateView, DetailView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,7 +17,7 @@ from django_tenders.permissions import IsAdminOrReadAndPutOnly
 from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
 from tenders.forms import RegisterUserForm
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
-    ExtendedCompanyData, ActiveTender
+    ExtendedCompanyData, ActiveTender, TransactionOut
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
     SubscriberBalanceSerializer, TransactionInSerializer, ExtendedCompanyDataSerializer, TransactionOutSerializer, \
     ActiveTenderSerializer
@@ -151,8 +152,43 @@ class ExtendedCompanyDataView(APIView):
         return Response('The lack of funds', status=status.HTTP_400_BAD_REQUEST)
 
 
-def profile_user(request):
-    return render(request, 'tenders/profile.html', {'title': 'Профіль'})
+class ProfileUser(DetailView):
+    model = Subscriber
+    template_name = 'tenders/profile.html'
+    slug_url_kwarg = 'username'
+    context_object_name = 'subscriber'
+
+    def get_object(self, queryset=None):
+        # Get the username from the URL
+        username = self.kwargs.get(self.slug_url_kwarg)
+
+        # Get the user id from the User model
+        user = User.objects.get(username=username)
+        user_id = user.id
+
+        # Retrieve the Subscriber object based on user_id
+        subscriber = get_object_or_404(Subscriber, user_id=user_id)
+        return subscriber
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get the subscriber object
+        subscriber = context['subscriber']
+
+        # Retrieve the related information
+        dk_numbers = list(subscriber.dk_numbers.all())
+
+        # Retrieve transactions related to the subscriber
+        transactions_in = TransactionIn.objects.filter(subscriber_balance=subscriber.subscriberbalance)
+        transactions_out = TransactionOut.objects.filter(subscriber_balance=subscriber.subscriberbalance)
+
+        # Add the values to the context dictionary
+        context['dk_numbers'] = dk_numbers
+        context['transactions_in'] = list(transactions_in)
+        context['transactions_out'] = transactions_out
+
+        return context
 
 
 class RegisterUser(CreateView):
@@ -168,8 +204,7 @@ class RegisterUser(CreateView):
     def form_valid(self, form):
         user = form.save()
         login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect('profile')
-
+        return reverse_lazy('profile', kwargs={'username': user.username})
 
 
 class LoginUser(LoginView):
@@ -178,11 +213,12 @@ class LoginUser(LoginView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Авториація'
+        context['title'] = 'Авторизація'
         return context
 
     def get_success_url(self):
-        return reverse_lazy('profile')
+        user = self.request.user
+        return reverse_lazy('profile', kwargs={'username': user.username})
 
 def index(request):
     return render(request, 'tenders/index.html', {'title': 'Головна сторінка'})

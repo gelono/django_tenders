@@ -12,7 +12,7 @@
 <body>
     <header>
         {% if user.is_authenticated %}
-          {{ user.username }}
+          <a href="{{ subscriber.get_absolute_url }}">{{ user.username }}</a>
           <a href="{% provider_login_url 'google' process='connect' %}">Підключити обліковий запис Google</a>
           <a href="{% url 'logout' %}">Вийти</a>
         {% else %}

@@ -3,6 +3,18 @@
 {% block content %}
 <div class="form-container">
     <h1>Доброго дня, {{ user.username }}!</h1>
-
+    <div>
+    <li>Ваш поточний баланс: {{ subscriber.subscriberbalance.current_balance }} UAH</li>
+    <li>Ваш номер телефона: {{ subscriber.phone_number }}</li>
+    <li>Ваш telegram user id: {{ subscriber.telegram_user_id }}</li>
+        <h2>Кодифікатори, на які Ви підписані:</h2>
+        {% for dk in dk_numbers %}
+            <li>{{ dk }}</li>
+        {% endfor %}
+        <h2>Транзакції поповнення балансу коштів:</h2>
+        {% for t in transactions_in %}
+            <li>{{ t.created }} | amount: {{ t.amount }} UAH</li>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

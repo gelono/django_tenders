@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 
 
 # Create your models here.
@@ -82,6 +83,9 @@ class Subscriber(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    def get_absolute_url(self):
+        return reverse('profile', kwargs={'username': self.user.username})
 
 
 class SubscriberBalance(models.Model):
