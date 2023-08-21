@@ -3,9 +3,10 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView
+from django.urls import reverse_lazy, reverse
+from django.views.generic import DetailView, FormView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,7 +16,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from django_tenders.permissions import IsAdminOrReadAndPutOnly
 from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
-from tenders.forms import RegisterUserForm
+from tenders.forms import RegisterUserForm, UpdateUserForm
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
     ExtendedCompanyData, ActiveTender, TransactionOut
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
@@ -176,7 +177,7 @@ class ProfileUser(DetailView):
         # Get the subscriber object
         subscriber = context['subscriber']
 
-        # Retrieve the related information
+        # Retrieve the related codifiers information
         dk_numbers = list(subscriber.dk_numbers.all())
 
         # Retrieve transactions related to the subscriber
@@ -186,15 +187,37 @@ class ProfileUser(DetailView):
         # Add the values to the context dictionary
         context['dk_numbers'] = dk_numbers
         context['transactions_in'] = list(transactions_in)
-        context['transactions_out'] = transactions_out
+        context['transactions_out'] = list(transactions_out)
+
+        # Include the UpdateUserForm instance in the context
+        update_user_form = UpdateUserForm(instance=self.request.user)
+        context['update_user_form'] = update_user_form
 
         return context
 
+    def post(self, request, *args, **kwargs):
+        # Get the subscriber object
+        subscriber = self.get_object()
 
-class RegisterUser(CreateView):
+        # Create an instance of the UpdateUserForm
+        update_user_form = UpdateUserForm(request.POST, instance=subscriber.user)
+
+        if update_user_form.is_valid():
+            # Update User model fields
+            user = update_user_form.save()
+
+            # Redirect to the profile page
+            return HttpResponseRedirect(reverse('profile', kwargs={'username': user.username}))
+
+        # If form data is not valid, re-render the profile page with errors
+        context = self.get_context_data()
+        context['update_user_form'] = update_user_form
+        return self.render_to_response(context)
+
+
+class RegisterUser(FormView):
     form_class = RegisterUserForm
     template_name = 'tenders/register.html'
-    success_url = reverse_lazy('home')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -202,8 +225,23 @@ class RegisterUser(CreateView):
         return context
 
     def form_valid(self, form):
+        # Create the User instance
         user = form.save()
+
+        # Create the Subscriber instance
+        subscriber = Subscriber.objects.create(
+            user=user,
+            phone_number=form.cleaned_data['phone_number']
+        )
+
+        # Create the SubscriberBalance instance
+        SubscriberBalance.objects.create(subscriber=subscriber)
+
         login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return super(RegisterUser, self).form_valid(form)
+
+    def get_success_url(self):
+        user = self.request.user
         return reverse_lazy('profile', kwargs={'username': user.username})
 
 

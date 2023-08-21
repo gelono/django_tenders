@@ -6,7 +6,7 @@ body {
     color: #333;
 }
 header {
-    background-color: #333;
+    background-color: #003d66;
     color: #fff;
     padding: 10px;
     display: flex;
@@ -24,6 +24,9 @@ main {
 article {
     flex: 0 0 30%; /* 30% width, not growing or shrinking */
     padding-right: 20px;
+    padding-left: 20px;
+    background-color: #b3e0ff;
+    margin-top: -20px;
 }
 aside {
     flex: 1;
@@ -38,8 +41,16 @@ footer {
 }
 h1 {
     font-size: 24px;
+    margin-top: 10px;
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 20px;
     margin-bottom: 10px;
 }
+
 p {
     font-size: 16px;
     line-height: 1.5;
@@ -70,16 +81,17 @@ a {
     flex-direction: column;
     align-items: center; /* Center items horizontally */
     margin-right: 20px; /* Add spacing between the article and the form */
-    border-left: 1px solid #ddd;
+
 }
 
 .form-container h1 {
-    margin-left: 450px;
-    margin-bottom: 20px; /* Add spacing between the title and the form */
+    margin-left: 220px;
+    margin-bottom: 10px; /* Add spacing between the title and the form */
 }
 
+
 .form-container form {
-    margin-left: 450px;
+    margin-left: 200px;
     width: 100%; /* Ensure the form occupies the entire width of its container */
     max-width: 400px; /* Set a maximum width for the form */
     padding: 20px; /* Add padding for a better visual appearance */

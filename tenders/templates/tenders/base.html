@@ -3,16 +3,26 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
-    <link rel="stylesheet" href="{% static 'tenders/css/styles.css' %}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+    <link rel="stylesheet" href="{% static 'tenders/css/styles.css' %}">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="shortcut icon" href="{% static 'tenders/images/logo_1.png' %}" type="image/x-icon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <header>
+        <a href="{% url 'home' %}" style="position: absolute; top: 1px; left: 10px;">
+            <img src="{% static 'tenders/images/logo_1.png' %}" alt="Logo" class="logo" style="width: 35px; height: auto;">
+        </a>
         {% if user.is_authenticated %}
-          <a href="{{ subscriber.get_absolute_url }}">{{ user.username }}</a>
+          <a href="{{ user.subscriber.get_absolute_url }}">{{ user.username }}</a>
           <a href="{% provider_login_url 'google' process='connect' %}">Підключити обліковий запис Google</a>
           <a href="{% url 'logout' %}">Вийти</a>
         {% else %}

@@ -1,20 +1,82 @@
 {% extends 'tenders/base.html' %}
 
 {% block content %}
-<div class="form-container">
-    <h1>Доброго дня, {{ user.username }}!</h1>
-    <div>
-    <li>Ваш поточний баланс: {{ subscriber.subscriberbalance.current_balance }} UAH</li>
-    <li>Ваш номер телефона: {{ subscriber.phone_number }}</li>
-    <li>Ваш telegram user id: {{ subscriber.telegram_user_id }}</li>
-        <h2>Кодифікатори, на які Ви підписані:</h2>
-        {% for dk in dk_numbers %}
-            <li>{{ dk }}</li>
-        {% endfor %}
-        <h2>Транзакції поповнення балансу коштів:</h2>
-        {% for t in transactions_in %}
-            <li>{{ t.created }} | amount: {{ t.amount }} UAH</li>
-        {% endfor %}
+<div style="display: flex; flex-wrap: wrap; flex-direction: column;">
+    <div style="position: absolute; top: 5%; left: 50%;">
+        <h1>Доброго дня, {{ user.username }}!</h1>
+    </div>
+    <!-- Add the tab navigation -->
+    <div style="position: absolute; top: 10%; left: 48%;">
+        <ul class="nav nav-tabs" id="profileTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#profileInfo">Інформація</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#editProfile">Редагувати профіль</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#editCodifier">Кодифікатори</a>
+            </li>
+        </ul>
+    </div>
+    <!-- Tab content -->
+    <div class="tab-content" style="position: absolute; top: 15%; left: 35%;">
+        <div id="profileInfo" class="tab-pane fade show active">
+            <!-- Existing profile information -->
+            <div>
+                <h3>Основна інформація:</h3>
+                <li>Ваш поточний баланс: {{ subscriber.subscriberbalance.current_balance }} UAH</li>
+                <li>Ваш email: {{ subscriber.user.email }}</li>
+                <li>Ваш номер телефона: {{ subscriber.phone_number }}</li>
+                <li>Ваш telegram user id: {{ subscriber.telegram_user_id }}</li>
+                    <h3>Кодифікатори, на які Ви підписані:</h3>
+                    {% if dk_numbers %}
+                        {% for dk in dk_numbers %}
+                            <li>{{ dk }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>У Вас немає підписок</li>
+                    {% endif %}
+                    <h3>Транзакції поповнення балансу коштів:</h3>
+                    {% if transactions_in %}
+                        {% for t in transactions_in %}
+                            <li>{{ t.created }} | amount: {{ t.amount }} UAH</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>У Вас немає транзакцій</li>
+                    {% endif %}
+                    <h3>Транзакції витрачання коштів:</h3>
+                    {% if transactions_out %}
+                        {% for t in transactions_out %}
+                            <li>{{ t.created }} | amount: {{ t.amount }} UAH</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>У Вас немає транзакцій</li>
+                    {% endif %}
+            </div>
+        </div>
+
+        <div id="editProfile" class="tab-pane fade">
+            <!-- Form for editing user data -->
+            <div class="form-container">
+                <h1>Оновити дані</h1>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for f in update_user_form %}
+                        <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>{{ f }}</p>
+                        <div class="form-error">{{ f.errors }}</div>
+                    {% endfor %}
+                    <button type="submit">Оновити</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="editCodifier" class="tab-pane fade">
+            <!-- Codifiers -->
+            <div >
+                <h1>Панель кодифікаторів</h1>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
