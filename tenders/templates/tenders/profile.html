@@ -14,9 +14,6 @@
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#editProfile">Редагувати профіль</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#editCodifier">Кодифікатори</a>
-            </li>
         </ul>
     </div>
     <!-- Tab content -->
@@ -37,6 +34,7 @@
                     {% else %}
                         <li>У Вас немає підписок</li>
                     {% endif %}
+                    <li><a href="{% url 'codifiers' %}">Редагувати підписки на кодифікатори</a></li>
                     <h3>Транзакції поповнення балансу коштів:</h3>
                     {% if transactions_in %}
                         {% for t in transactions_in %}
@@ -68,13 +66,6 @@
                     {% endfor %}
                     <button type="submit">Оновити</button>
                 </form>
-            </div>
-        </div>
-
-        <div id="editCodifier" class="tab-pane fade">
-            <!-- Codifiers -->
-            <div >
-                <h1>Панель кодифікаторів</h1>
             </div>
         </div>
     </div>

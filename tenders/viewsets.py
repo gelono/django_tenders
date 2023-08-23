@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, ListView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,7 +18,7 @@ from django_tenders.permissions import IsAdminOrReadAndPutOnly
 from tenders.filters import ArchiveTenderFilter, CustomerFilter, WinnerFilter, ActiveTenderFilter
 from tenders.forms import RegisterUserForm, UpdateUserForm
 from tenders.models import ArchiveTender, Customer, Subscriber, Winner, SubscriberBalance, TransactionIn, \
-    ExtendedCompanyData, ActiveTender, TransactionOut
+    ExtendedCompanyData, ActiveTender, TransactionOut, DKNumber
 from tenders.serializers import ArchiveTenderSerializer, CustomerSerializer, WinnerSerializer, \
     SubscriberBalanceSerializer, TransactionInSerializer, ExtendedCompanyDataSerializer, TransactionOutSerializer, \
     ActiveTenderSerializer
@@ -260,3 +260,40 @@ class LoginUser(LoginView):
 
 def index(request):
     return render(request, 'tenders/index.html', {'title': 'Головна сторінка'})
+
+
+class CodifierView(ListView):
+    model = DKNumber
+    template_name = 'tenders/codifiers.html'
+    context_object_name = 'dk_numbers'
+    object_list = DKNumber.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        dk_numbers_subs = self.request.user.subscriber.dk_numbers.all()
+
+        context['object_list'] = self.object_list
+        context['dk_numbers_subs'] = dk_numbers_subs
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Get the selected value from the form
+        selected_dk_number = request.POST.get('dk_number')
+
+        # Delete the dk number from subscriptions
+        if 'delete' in request.POST:
+            dk_name = request.POST.get('dk_to_delete')
+            dk_to_delete = DKNumber.objects.get(dk=dk_name)
+            self.request.user.subscriber.dk_numbers.remove(dk_to_delete)
+            return redirect('codifiers')
+
+        # Update subscriptions
+        new_dk_number = DKNumber.objects.get(dk=selected_dk_number)
+        self.request.user.subscriber.dk_numbers.add(new_dk_number)
+
+        # Update the context and render the template
+        context = self.get_context_data()
+        context['selected_dk_number'] = selected_dk_number
+
+        return render(request, self.template_name, context)
