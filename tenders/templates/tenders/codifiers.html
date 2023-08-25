@@ -50,35 +50,11 @@
         <h3>Результат пошуку:</h3>
             {% if dk_numbers_search %}
                 {% for dk in dk_numbers_search %}
-                    <li>{{ dk }} --> {{ dk.description }}</li>
+                    <li style="margin-left: 15px;">{{ dk }} --> {{ dk.description }}</li>
                 {% endfor %}
             {% else %}
-                <li>{{ search_result }}</li>
+                <li style="margin-left: 15px;">{{ search_result }}</li>
             {% endif %}
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-        // Initialize Select2 on the select element
-        $('.select2').select2();
-
-        // Attach the change event to the select element
-        $("#dkNumberSelect").on("change", function() {
-            var selectedOption = $(this).find(":selected");
-            $("#descriptionTextArea").val(selectedOption.data("description"));
-        });
-    });
-</script>
-
-<script>
-    const selectElement = document.querySelector('#dkNumberSelect');
-    const descriptionTextArea = document.querySelector('#descriptionTextArea');
-
-    selectElement.addEventListener('change', function() {
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        descriptionTextArea.value = selectedOption.getAttribute('data-description');
-    });
-</script>
-
 {% endblock %}
