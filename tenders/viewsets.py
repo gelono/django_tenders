@@ -1,8 +1,10 @@
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
@@ -153,11 +155,12 @@ class ExtendedCompanyDataView(APIView):
         return Response('The lack of funds', status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProfileUser(DetailView):
+class ProfileUser(LoginRequiredMixin, DetailView):
     model = Subscriber
     template_name = 'tenders/profile.html'
     slug_url_kwarg = 'username'
     context_object_name = 'subscriber'
+    login_url = reverse_lazy('login')
 
     def get_object(self, queryset=None):
         # Get the username from the URL
@@ -262,18 +265,33 @@ def index(request):
     return render(request, 'tenders/index.html', {'title': 'Головна сторінка'})
 
 
-class CodifierView(ListView):
+class CodifierView(LoginRequiredMixin, ListView):
     model = DKNumber
     template_name = 'tenders/codifiers.html'
     context_object_name = 'dk_numbers'
     object_list = DKNumber.objects.all()
+    login_url = reverse_lazy('login')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         dk_numbers_subs = self.request.user.subscriber.dk_numbers.all()
 
+        # For the searching
+        search_result = 'Введіть параметри пошуку'
+        search_description = self.request.GET.get('search_description')
+        if search_description:
+            dk_numbers_search = self.object_list.filter(
+                Q(description__icontains=search_description)
+            )
+            if dk_numbers_search:
+                context['dk_numbers_search'] = dk_numbers_search
+            else:
+                search_result = f'За вказаними даними "{search_description}" кодифікатори не знайдені'
+
         context['object_list'] = self.object_list
         context['dk_numbers_subs'] = dk_numbers_subs
+        context['search_result'] = search_result
+
 
         return context
 
@@ -290,10 +308,15 @@ class CodifierView(ListView):
 
         # Update subscriptions
         new_dk_number = DKNumber.objects.get(dk=selected_dk_number)
-        self.request.user.subscriber.dk_numbers.add(new_dk_number)
+        if new_dk_number in list(self.request.user.subscriber.dk_numbers.all()):
+            about_subs = 'Ви вже підписані на цей кодифікатор:'
+        else:
+            self.request.user.subscriber.dk_numbers.add(new_dk_number)
+            about_subs = 'Ви підписались на кодифікатор:'
 
         # Update the context and render the template
         context = self.get_context_data()
         context['selected_dk_number'] = selected_dk_number
+        context['about_subs'] = about_subs
 
         return render(request, self.template_name, context)

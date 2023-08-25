@@ -1,45 +1,75 @@
 {% extends 'tenders/base.html' %}
 
 {% block content %}
-<div style="display: flex; flex-wrap: wrap; flex-direction: column; padding-left: 20px">
-    <div><h1>Панель кодифікаторів</h1></div>
-    <div>
-        <form method="post" action="{% url 'codifiers' %}">
-            {% csrf_token %}
-            <select name="dk_number" id="dkNumberSelect">
-                {% for dk_number in dk_numbers %}
-                <option value="{{ dk_number.dk }}" data-description="{{ dk_number.description }}">{{ dk_number.dk }}</option>
-                {% endfor %}
-            </select>
-            <textarea id="descriptionTextArea" readonly style="width: 100%; resize: vertical;"></textarea>
-            <input type="submit" value="Підписатись">
-        </form>
+<div>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div style="display: flex; flex-wrap: wrap; flex-direction: column; padding-left: 20px;">
+            <div><h1>Панель кодифікаторів</h1></div>
+            <div>
+                <form method="post" action="{% url 'codifiers' %}">
+                    {% csrf_token %}
+                    <select name="dk_number" id="dkNumberSelect" class="select2">
+                        {% for dk_number in dk_numbers %}
+                        <option value="{{ dk_number.dk }}" data-description="{{ dk_number.description }}">{{ dk_number.dk }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea id="descriptionTextArea" readonly style="width: 100%; resize: vertical;"></textarea>
+                    <input type="submit" value="Підписатись">
+                </form>
+            </div>
+            {% if selected_dk_number %}
+            <div><h3>{{ about_subs }} {{ selected_dk_number }}</h3></div>
+            {% endif %}
+        </div>
+
+        <div style="flex: 1; margin-left: 40px;">
+            <h3 style="padding-left: 25px;">Кодифікатори, на які Ви підписані:</h3>
+            <ul>
+                {% if dk_numbers_subs %}
+                    {% for dk in dk_numbers_subs %}
+                        <li>
+                            {{ dk }}
+                            <form method="post" action="{% url 'codifiers' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="dk_to_delete" value="{{ dk }}">
+                                <input type="submit" name="delete" value="Видалити">
+                            </form>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>У Вас немає підписок</li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-    {% if selected_dk_number %}
-    <div><h3>Ви підписались на кодифікатор: {{ selected_dk_number }}</h3></div>
-    {% endif %}
+    <div style="padding-left: 20px; margin-top: 40px;">
+        <form method="get" action="{% url 'codifiers' %}">
+            <input type="text" name="search_description" placeholder="Search by description">
+            <input type="submit" value="Search">
+        </form>
+        <h3>Результат пошуку:</h3>
+            {% if dk_numbers_search %}
+                {% for dk in dk_numbers_search %}
+                    <li>{{ dk }} --> {{ dk.description }}</li>
+                {% endfor %}
+            {% else %}
+                <li>{{ search_result }}</li>
+            {% endif %}
+    </div>
 </div>
 
-<div style="flex: 1; margin-left: 40px;">
-    <h3 style="padding-left: 25px;">Кодифікатори, на які Ви підписані:</h3>
-    <ul>
-        {% if dk_numbers_subs %}
-            {% for dk in dk_numbers_subs %}
-                <li>
-                    {{ dk }}
-                    <form method="post" action="{% url 'codifiers' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="dk_to_delete" value="{{ dk }}">
-                        <input type="submit" name="delete" value="Видалити">
-                    </form>
-                </li>
-            {% endfor %}
-        {% else %}
-            <li>У Вас немає підписок</li>
-        {% endif %}
-    </ul>
-</div>
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 on the select element
+        $('.select2').select2();
 
+        // Attach the change event to the select element
+        $("#dkNumberSelect").on("change", function() {
+            var selectedOption = $(this).find(":selected");
+            $("#descriptionTextArea").val(selectedOption.data("description"));
+        });
+    });
+</script>
 
 <script>
     const selectElement = document.querySelector('#dkNumberSelect');
